@@ -96,6 +96,25 @@ cmd_list_timezones() {
     | tr ' ' '\n' | grep '/' | tr -d '"' | sort
 }
 
+cmd_show() {
+  need_busctl
+
+  local timezone local_rtc can_ntp use_ntp ntp_sync
+  timezone=$(get_property Timezone)
+  local_rtc=$(get_property LocalRTC)
+  can_ntp=$(get_property CanNTP)
+  use_ntp=$(get_property NTP)
+  ntp_sync=$(get_property NTPSynchronized)
+
+  printf "Timezone=%s\n"         "$timezone"
+  printf "LocalRTC=%s\n"         "$local_rtc"
+  printf "CanNTP=%s\n"           "$can_ntp"
+  printf "NTP=%s\n"              "$use_ntp"
+  printf "NTPSynchronized=%s\n"  "$ntp_sync"
+  printf "TimeUSec=%s\n"         "$(date +%s)000000"
+  printf "RTCTimeUSec=%s\n"      "$(hwclock --show 2>/dev/null | awk '{print $1"T"$2}' || echo n/a)"
+}
+
 usage() {
   cat <<EOF
 Usage: timedatectl [OPTIONS] COMMAND
@@ -106,6 +125,7 @@ Commands:
   set-local-rtc [0|1]      Control whether RTC is in local time
   set-ntp [0|1]            Enable or disable NTP synchronization
   list-timezones           List available timezones
+  show                     Show settings in key=value format
 
 Options:
   -h, --help               Show this help
@@ -119,6 +139,7 @@ case "$1" in
   set-local-rtc)    cmd_set_local_rtc "$2" ;;
   set-ntp)          cmd_set_ntp "$2" ;;
   list-timezones)   cmd_list_timezones ;;
+  show)             cmd_show ;;
   -h|--help)        usage ;;
   *)                die "Unknown command '$1'. Try --help." ;;
 esac
