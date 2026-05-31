@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2023 Andrey V.Kosteltsev <kx@radix.pro>
  *
@@ -118,7 +117,7 @@ _check_polkit_authorization_callback( GObject      *source_object,
     g_task_report_error( NULL, data->callback, data->user_data, NULL, error );
     goto out;
   }
- 
+
   if( !polkit_authorization_result_get_is_authorized( result ) )
   {
     g_task_report_new_error( NULL,
@@ -377,7 +376,10 @@ gboolean handle_set_timezone( RclTimedateDaemon     *object,
   }
 
   if( g_strcmp0( (const char *)daemon->priv->timezone, (const char *)timezone ) == 0 )
-    goto out;
+  {
+    rcl_timedate_daemon_complete_set_timezone( object, invocation );
+    return TRUE;
+  }
 
   data = g_new0( struct set_timezone_data, 1 );
   data->object         = object;
@@ -391,7 +393,6 @@ gboolean handle_set_timezone( RclTimedateDaemon     *object,
                                   interactive,
                                   set_timezone_authorized_callback,
                                   data );
-out:
   return TRUE;
 }
 
@@ -534,7 +535,10 @@ gboolean handle_set_local_rtc( RclTimedateDaemon     *object,
   struct set_local_rtc_data *data;
 
   if( daemon->priv->local_rtc == local_rtc && !fix_system )
-    goto out;
+  {
+    rcl_timedate_daemon_complete_set_local_rtc( object, invocation );
+    return TRUE;
+  }
 
   data = g_new0( struct set_local_rtc_data, 1 );
   data->object      = object;
@@ -549,7 +553,6 @@ gboolean handle_set_local_rtc( RclTimedateDaemon     *object,
                                   interactive,
                                   set_local_rtc_authorized_callback,
                                   data );
-out:
   return TRUE;
 }
 
@@ -768,6 +771,7 @@ gboolean handle_set_ntp( RclTimedateDaemon     *object,
   {
     daemon->priv->use_ntp = FALSE;
     rcl_timedate_daemon_set_ntp( object, daemon->priv->use_ntp );
+    rcl_timedate_daemon_complete_set_ntp( object, invocation );
     return TRUE;
   }
 
@@ -928,7 +932,8 @@ gboolean handle_set_time( RclTimedateDaemon     *object,
   if( relative && usec_utc == 0 )
   {
     /* Nothing to do */
-    goto out;
+    rcl_timedate_daemon_complete_set_time( object, invocation );
+    return TRUE;
   }
 
   data = g_new0( struct set_time_data, 1 );
@@ -945,8 +950,6 @@ gboolean handle_set_time( RclTimedateDaemon     *object,
                                   interactive,
                                   set_time_authorized_callback,
                                   data );
-
-out:
   return TRUE;
 }
 
