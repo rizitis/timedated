@@ -4,6 +4,7 @@
 # Bash implementation for systems using timedated without systemd.
 #
 # rizitis 2026, GPLv2+
+#V=2
 
 DBUS_DEST="org.freedesktop.timedate1"
 DBUS_PATH="/org/freedesktop/timedate1"
@@ -34,15 +35,10 @@ cmd_status() {
   use_ntp=$(get_property NTP)
   ntp_sync=$(get_property NTPSynchronized)
 
-  # format booleans
-  local_rtc_str="no"
-  [ "$local_rtc" = "true" ] && local_rtc_str="yes"
-  can_ntp_str="no"
-  [ "$can_ntp" = "true" ] && can_ntp_str="yes"
-  use_ntp_str="no"
-  [ "$use_ntp" = "true" ] && use_ntp_str="yes"
-  ntp_sync_str="no"
-  [ "$ntp_sync" = "true" ] && ntp_sync_str="yes"
+  local_rtc_str="no";  [ "$local_rtc" = "true" ] && local_rtc_str="yes"
+  can_ntp_str="no";    [ "$can_ntp"   = "true" ] && can_ntp_str="yes"
+  use_ntp_str="no";    [ "$use_ntp"   = "true" ] && use_ntp_str="yes"
+  ntp_sync_str="no";   [ "$ntp_sync"  = "true" ] && ntp_sync_str="yes"
 
   time_now=$(date)
   rtc_time=$(hwclock --show 2>/dev/null | head -1 || echo "n/a")
@@ -55,6 +51,25 @@ cmd_status() {
   printf "         NTP synchronized: %s\n" "$ntp_sync_str"
   printf "          RTC in local TZ: %s\n" "$local_rtc_str"
   printf "               CanNTP: %s\n"     "$can_ntp_str"
+}
+
+cmd_show() {
+  need_busctl
+
+  local timezone local_rtc can_ntp use_ntp ntp_sync
+  timezone=$(get_property Timezone)
+  local_rtc=$(get_property LocalRTC)
+  can_ntp=$(get_property CanNTP)
+  use_ntp=$(get_property NTP)
+  ntp_sync=$(get_property NTPSynchronized)
+
+  printf "Timezone=%s\n"         "$timezone"
+  printf "LocalRTC=%s\n"         "$local_rtc"
+  printf "CanNTP=%s\n"           "$can_ntp"
+  printf "NTP=%s\n"              "$use_ntp"
+  printf "NTPSynchronized=%s\n"  "$ntp_sync"
+  printf "TimeUSec=%s\n"         "$(date +%s)000000"
+  printf "RTCTimeUSec=%s\n"      "$(hwclock --show 2>/dev/null | awk '{print $1"T"$2}' || echo 'n/a')"
 }
 
 cmd_set_timezone() {
@@ -90,29 +105,75 @@ cmd_set_ntp() {
     || die "Failed to set NTP"
 }
 
+cmd_set_time() {
+  need_busctl
+  [ -z "$1" ] && die "set-time: missing argument (e.g. '2026-05-31 20:30:00')"
+  local ntp
+  ntp=$(get_property NTP)
+  [ "$ntp" = "true" ] && die "set-time: NTP is enabled — disable it first with: timedatectl set-ntp 0"
+
+  cat >&2 <<'WARN'
+
+  ╔══════════════════════════════════════════════════════════════╗
+  ║                        !! WARNING !!                        ║
+  ║                                                             ║
+  ║  You are about to SET THE SYSTEM TIME MANUALLY.             ║
+  ║  If you enter the wrong time, your system clock will be     ║
+  ║  wrong and NTP may take a long time to correct it.          ║
+  ║                                                             ║
+  ║  To recover from a wrong set-time, run:                     ║
+  ║    sudo timedatectl sync-now                                ║
+  ║                                                             ║
+  ╚══════════════════════════════════════════════════════════════╝
+
+WARN
+
+  printf "  Current time : %s\n" "$(date)" >&2
+  printf "  You entered  : %s\n\n" "$1" >&2
+  printf "  Are you sure? [yes/N]: " >&2
+  read -r confirm
+  [ "$confirm" = "yes" ] || die "set-time: aborted"
+
+  local usec
+  usec=$(date -d "$1" +%s%6N 2>/dev/null) || die "set-time: invalid time format '$1'"
+  busctl call "$DBUS_DEST" "$DBUS_PATH" "$DBUS_IFACE" SetTime xbb "$usec" false false \
+    || die "Failed to set time"
+}
+
 cmd_list_timezones() {
   need_busctl
   busctl call "$DBUS_DEST" "$DBUS_PATH" "$DBUS_IFACE" ListTimezones \
     | tr ' ' '\n' | grep '/' | tr -d '"' | sort
 }
 
-cmd_show() {
-  need_busctl
+cmd_sync_now() {
+  local ntp_service
 
-  local timezone local_rtc can_ntp use_ntp ntp_sync
-  timezone=$(get_property Timezone)
-  local_rtc=$(get_property LocalRTC)
-  can_ntp=$(get_property CanNTP)
-  use_ntp=$(get_property NTP)
-  ntp_sync=$(get_property NTPSynchronized)
+  if pidof ntpd &>/dev/null; then
+    ntp_service="ntpd"
+  elif pidof chronyd &>/dev/null; then
+    ntp_service="chronyd"
+  elif pidof openntpd &>/dev/null; then
+    ntp_service="openntpd"
+  else
+    die "sync-now: no NTP daemon found running"
+  fi
 
-  printf "Timezone=%s\n"         "$timezone"
-  printf "LocalRTC=%s\n"         "$local_rtc"
-  printf "CanNTP=%s\n"           "$can_ntp"
-  printf "NTP=%s\n"              "$use_ntp"
-  printf "NTPSynchronized=%s\n"  "$ntp_sync"
-  printf "TimeUSec=%s\n"         "$(date +%s)000000"
-  printf "RTCTimeUSec=%s\n"      "$(hwclock --show 2>/dev/null | awk '{print $1"T"$2}' || echo n/a)"
+  case "$ntp_service" in
+    ntpd)
+      /etc/rc.d/rc.ntpd stop 2>/dev/null
+      ntpdate pool.ntp.org || die "sync-now: ntpdate failed"
+      /etc/rc.d/rc.ntpd start 2>/dev/null
+      ;;
+    chronyd)
+      chronyc makestep || die "sync-now: chronyc makestep failed"
+      ;;
+    openntpd)
+      /etc/rc.d/rc.openntpd restart 2>/dev/null
+      ;;
+  esac
+
+  echo "timedatectl: time synchronized successfully"
 }
 
 usage() {
@@ -121,11 +182,13 @@ Usage: timedatectl [OPTIONS] COMMAND
 
 Commands:
   status                   Show current time settings
+  show                     Show settings in key=value format
   set-timezone ZONE        Set the system timezone (e.g. Europe/Athens)
   set-local-rtc [0|1]      Control whether RTC is in local time
   set-ntp [0|1]            Enable or disable NTP synchronization
+  set-time TIME            Set time manually (e.g. '2026-05-31 20:30:00')
   list-timezones           List available timezones
-  show                     Show settings in key=value format
+  sync-now                 Force immediate NTP time sync
 
 Options:
   -h, --help               Show this help
@@ -135,11 +198,13 @@ EOF
 # main
 case "$1" in
   ""|status)        cmd_status ;;
+  show)             cmd_show ;;
   set-timezone)     cmd_set_timezone "$2" ;;
   set-local-rtc)    cmd_set_local_rtc "$2" ;;
   set-ntp)          cmd_set_ntp "$2" ;;
+  set-time)         cmd_set_time "$2" ;;
   list-timezones)   cmd_list_timezones ;;
-  show)             cmd_show ;;
+  sync-now)         cmd_sync_now ;;
   -h|--help)        usage ;;
   *)                die "Unknown command '$1'. Try --help." ;;
 esac
