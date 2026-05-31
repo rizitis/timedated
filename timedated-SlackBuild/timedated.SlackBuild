@@ -97,7 +97,7 @@ cd ..
 
 # timedatectl :D
 mkdir -p $PKG/usr/bin
-cat $CWD/timedatectl > $PKG/usr/bin/timedatectl
+cat timedatectl > $PKG/usr/bin/timedatectl
 chmod +x $PKG/usr/bin/timedatectl
 
 find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
