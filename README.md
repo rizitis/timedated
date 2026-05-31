@@ -46,8 +46,9 @@ For other systems the special implementation of NTP daemon control should be dev
 
 ## TODO:
 
-  - *timedatectl* (simply it can be writen in Bash).
+~~- *timedatectl* (simply it can be writen in Bash).~~
 
+Done! 
 
 ## LICENSE:
 
