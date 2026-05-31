@@ -39,16 +39,16 @@ to give them rights to access the **org.freedesktop.timedate1** *D-Bus interface
 
  - [Radix cross Linux](https://radix.pro)
  - [Slackware](http://www.slackware.com)
-   (needed litle changes in timeconfig script)
+  ~~ (needed litle changes in timeconfig script)~~ <br>
+Update: *Slackware-current works fine now*
 
 For other systems the special implementation of NTP daemon control should be developed.
 
 
 ## TODO:
 
-~~- *timedatectl* (simply it can be writen in Bash).~~
-
-Done! 
+~~- *timedatectl* (simply it can be writen in Bash).~~ <br>
+Update: Done! 
 
 ## LICENSE:
 
