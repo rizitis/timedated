@@ -222,17 +222,24 @@ static guint64 get_rtctime_usec( RclTimedateDaemon *object )
 {
   struct tm tm   = {};
   guint64   usec = 0;
+  gboolean  local_rtc = FALSE;
 
   if( !clock_get_hwclock( &tm ) )
   {
-    g_debug( "get-ntpsynchronized: error: Cannot get RTC clock" );
-
+    g_debug( "get-rtctime-usec: error: Cannot get RTC clock" );
     rcl_timedate_daemon_set_rtctime_usec( object, (guint64)0 );
-
     return (guint64)0;
   }
 
-  usec = (guint64)timegm( &tm ) * USEC_PER_SEC;
+  /* Read local_rtc setting to correctly interpret RTC time */
+  (void)read_data_local_rtc( &local_rtc );
+
+  /*
+   * If RTC is in localtime, use mktime() (local → epoch).
+   * If RTC is in UTC, use timegm() (UTC → epoch).
+   */
+  time_t t = mktime_or_timegm( &tm, !local_rtc );
+  usec = (guint64)t * USEC_PER_SEC;
 
   rcl_timedate_daemon_set_rtctime_usec( object, usec );
 
