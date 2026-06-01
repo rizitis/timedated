@@ -1,9 +1,21 @@
 ---
-
 https://www.linuxquestions.org/questions/slackware-14/building-timedate-daemon-for-slackware-current-a-d-bus-service-that-is-required-starting-with-kde-plasma-6-7-0-a-4175764503/page2.html#post6635645
 
-Regarding the **privileged-group=wheel** option in the SlackBuild: @gmgf're right to question it. 
-Under Slackware, privileged actions are typically performed as root, so this option may not be necessary. We'll revisit it.
+The logic is:
+
+.policy specifies that all actions require auth_admin_keep — i.e. root password from anyone.
+.rules is the override: if the user is in @PRIVILEDGED_GROUP@, it skips the password and automatically gets YES.
+.conf only allows the root user to own the D-Bus service — correct.
+
+In Slackware the wheel group exists and usually admin is a member. So wheel is the correct choice — no need to change. It means:
+
+Root and wheel members → change time/timezone without password prompt
+Everyone else → asks for root password (via PolKit)
+
+
+
+So egarding the **privileged-group=wheel** option in the SlackBuild: @gmgf're right to question it.
+Under Slackware, privileged actions are typically performed as root, so this option may not be necessary but it is not a problem if you want your $USER to call dbus and if your user has grouped in wheel. We'll revisit it...
 
 Regarding the **"can't go backwards" time issue**: I tested it thoroughly and the good news is there is no bug in the daemon or the script. 
 The behavior @gmgf observed was caused by NTP still being active when tried to set the time.
