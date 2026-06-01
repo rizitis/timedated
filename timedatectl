@@ -147,6 +147,8 @@ cmd_list_timezones() {
 }
 
 cmd_sync_now() {
+  [ "$(id -u)" -ne 0 ] && die "sync-now: must be run as root"
+
   local ntp_service
 
   if pidof ntpd &>/dev/null; then
@@ -161,15 +163,13 @@ cmd_sync_now() {
 
   case "$ntp_service" in
     ntpd)
-      /etc/rc.d/rc.ntpd stop 2>/dev/null
-      ntpdate pool.ntp.org || die "sync-now: ntpdate failed"
-      /etc/rc.d/rc.ntpd start 2>/dev/null
+      /etc/rc.d/rc.ntpd restart 2>/dev/null || die "sync-now: failed to restart ntpd"
       ;;
     chronyd)
       chronyc makestep || die "sync-now: chronyc makestep failed"
       ;;
     openntpd)
-      /etc/rc.d/rc.openntpd restart 2>/dev/null
+      /etc/rc.d/rc.openntpd restart 2>/dev/null || die "sync-now: failed to restart openntpd"
       ;;
   esac
 

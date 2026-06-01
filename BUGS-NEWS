@@ -1,0 +1,24 @@
+---
+
+https://www.linuxquestions.org/questions/slackware-14/building-timedate-daemon-for-slackware-current-a-d-bus-service-that-is-required-starting-with-kde-plasma-6-7-0-a-4175764503/page2.html#post6635645
+
+Regarding the **privileged-group=wheel** option in the SlackBuild: @gmgf're right to question it. 
+Under Slackware, privileged actions are typically performed as root, so this option may not be necessary. We'll revisit it.
+
+Regarding the **"can't go backwards" time issue**: I tested it thoroughly and the good news is there is no bug in the daemon or the script. 
+The behavior @gmgf observed was caused by NTP still being active when tried to set the time.
+
+The `set-time` command requires NTP to be disabled first  exactly like systemd's `timedatectl` does. The correct workflow is:
+
+```
+timedatectl set-ntp 0
+timedatectl set-time '2026-06-01 10:00:00'
+```
+
+We confirmed that going backwards works perfectly once NTP is off.
+
+Also found and fixed a real bug in `sync-now`: it was using `ntpdate` (deprecated, requires root bind on port 123) which caused a "Permission denied" error unless run as root. The fix:
+- `sync-now` now requires root (returns an error if not)
+- instead of stop/ntpdate/start, it now does a clean `rc.ntpd restart` which uses the `-g` flag and forces sync regardless of the time offset
+
+Thanks again for the report — it was helpful!
