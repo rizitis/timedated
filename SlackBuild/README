@@ -15,3 +15,5 @@ Important: Even if you leave wheel out, a system that has no users in
 the wheel group will simply prompt for the root password via PolKit
 it doesn't break anything.
 Wheel is not restrictive, it's a "fast path" for admins.
+
+3. Latest release will be found: https://forge.slackware.nl/rizitis/timedated/releases

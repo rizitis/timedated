@@ -50,7 +50,8 @@ At runtime, the daemon expects an NTP daemon controllable through
 ## How to Build
 
 ```  
-Read README in SlackBuild folder
+Latest release will be found: https://forge.slackware.nl/rizitis/timedated/releases
+PLEASE Read README in SlackBuild folder
 ```
 
 Build-time options (see `meson_options.txt`):
