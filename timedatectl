@@ -149,29 +149,30 @@ cmd_list_timezones() {
 cmd_sync_now() {
   [ "$(id -u)" -ne 0 ] && die "sync-now: must be run as root"
 
-  local ntp_service
+  local ntpd_rc="/etc/rc.d/rc.ntpd"
+  local was_running=0
 
-  if pidof ntpd &>/dev/null; then
-    ntp_service="ntpd"
-  elif pidof chronyd &>/dev/null; then
-    ntp_service="chronyd"
-  elif pidof openntpd &>/dev/null; then
-    ntp_service="openntpd"
+  pidof ntpd &>/dev/null && was_running=1
+
+  # Step 1: stop ntpd so ntpdate can bind to the NTP port
+  [ "$was_running" -eq 1 ] && bash "$ntpd_rc" stop &>/dev/null
+
+  # Step 2: immediate one-shot step with ntpdate (reliable, handles large offsets)
+  if command -v ntpdate &>/dev/null; then
+    ntpdate -b pool.ntp.org &>/dev/null || die "sync-now: ntpdate failed to reach NTP servers"
   else
-    die "sync-now: no NTP daemon found running"
+    # Fallback: ntpd one-shot with timeout so it can't hang
+    timeout 30 /usr/sbin/ntpd -qg &>/dev/null \
+      || die "sync-now: ntpd one-shot sync failed or timed out"
   fi
 
-  case "$ntp_service" in
-    ntpd)
-      /etc/rc.d/rc.ntpd restart 2>/dev/null || die "sync-now: failed to restart ntpd"
-      ;;
-    chronyd)
-      chronyc makestep || die "sync-now: chronyc makestep failed"
-      ;;
-    openntpd)
-      /etc/rc.d/rc.openntpd restart 2>/dev/null || die "sync-now: failed to restart openntpd"
-      ;;
-  esac
+  # Step 3: sync the corrected time down to the RTC
+  command -v hwclock &>/dev/null && hwclock --systohc &>/dev/null
+
+  # Step 4: restart ntpd only if it was running before (i.e. automatic mode is on)
+  if [ "$was_running" -eq 1 ]; then
+    bash "$ntpd_rc" start &>/dev/null || die "sync-now: failed to restart ntpd"
+  fi
 
   echo "timedatectl: time synchronized successfully"
 }

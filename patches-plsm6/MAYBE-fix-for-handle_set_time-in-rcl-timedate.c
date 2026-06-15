@@ -1,3 +1,19 @@
+/*
+ * OPTIONAL / ALTERNATIVE implementation of handle_set_time().
+ *
+ * This is NOT currently used by the daemon.
+ *
+ * The default handle_set_time() returns an error when NTP is running,
+ * requiring the user/client to disable NTP first (via SetNTP false)
+ * before calling SetTime. KDE Plasma already does this automatically.
+ *
+ * This alternative version instead mimics systemd-timedated behaviour:
+ * it automatically stops and disables the NTP daemon before setting
+ * the time. Swap it into rcl-timedate.c only if a client is found that
+ * calls SetTime without first disabling NTP.
+ * NOTE: Plasma DONT need it so far,only a 3rd part guiapp might need it
+ */
+
 gboolean handle_set_time( RclTimedateDaemon     *object,
                           GDBusMethodInvocation *invocation,
                           gint64                 usec_utc,

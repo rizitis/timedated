@@ -807,7 +807,7 @@ struct set_time_data
   RclTimedateDaemon     *object;
   GDBusMethodInvocation *invocation;
   guint64                start;
-  guint64                usec_utc;
+  gint64                 usec_utc;   /* was guint64 — signed for relative (negative) offsets https://www.linuxquestions.org/questions/slackware-14/building-timedate-daemon-for-slackware-current-a-d-bus-service-that-is-required-starting-with-kde-plasma-6-7-0-a-4175764503/page3.html#post6637456 */
   gboolean               relative;
   gboolean               interactive;
   RclDaemon             *daemon;

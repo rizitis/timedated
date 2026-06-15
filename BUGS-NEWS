@@ -1,4 +1,39 @@
 ---
+Bug fixed: https://www.linuxquestions.org/questions/slackware-14/building-timedate-daemon-for-slackware-current-a-d-bus-service-that-is-required-starting-with-kde-plasma-6-7-0-a-4175764503/page3.html#post6637456
+
+Thanks a lot for the detailed report and testing it was very helpful. Here's what I found and fixed:
+
+1. "Time value overflow" when setting date/time (the main bug)
+
+This was the root cause of most of the failures you saw. In the `set_time_data` struct, the `usec_utc` field was declared as `guint64` (unsigned), but `SetTime` with `relative=true` can receive negative offsets when you move the clock backwards. A negative value stored in an unsigned integer wraps around to a huge number, which then tripped the overflow check — hence the error.
+
+The message had nothing to do with the year 2038; it was simply the signed/unsigned mismatch. Fixed by changing the field to `gint64` (signed). Backwards time changes now work correctly and consistently.
+
+This also explains the "sometimes accepts past time, sometimes not" behaviour it was the same overflow bug surfacing inconsistently depending on the offset. It's now consistent.
+
+2. RTCTimeUSec was wrong with LocalRTC
+
+Separately, `get_rtctime_usec()` always used `timegm()` (UTC) to convert the RTC reading, even when the RTC is kept in local time. On a LocalRTC=true system this reported the RTC time several hours off. Fixed to use `mktime()`/`timegm()` according to the actual LocalRTC setting.
+
+3. timedatectl sync-now
+
+You were right on both counts. The script now:
+- handles ntpd as the primary path for Slackware (chronyd/openntpd remain only as fallbacks because some of us might use them)
+- works even when automatic mode is OFF (ntpd disabled): it does a one-shot sync via `ntpdate`, syncs the RTC with `hwclock --systohc`, and only restarts ntpd if it was running before so it respects manual vs automatic mode
+
+4. The patches-plsm6/MAYBE-fix-for-handle_set_time file
+
+This is an OPTIONAL, currently-unused alternative implementation of `handle_set_time()`. The default daemon returns an error if you call SetTime while NTP is running, requiring NTP to be disabled first which KDE Plasma already does on its own (it sends SetNTP false before SetTime, as your debug log shows). The alternative version instead auto-stops NTP like systemd-timedated does.
+
+I'm leaving it in the tree but NOT enabling it, since it isn't needed for Plasma. It would only become necessary if some client tries to call SetTime without disabling NTP first. I've added a comment at the top of the file explaining this.
+
+I've verified all of the above via CLI on Slackware-current with Plasma 5. If you could re-test the time/date page on Plasma 6.7 with the updated daemon and confirm the overflow error is gone, that would be great.
+
+Thanks again!
+
+NOTE that this project wants to ALSO support Gnome 50+ which so far works without issues.
+
+---
 Bug fixed: RTCTimeUSec was displayed incorrectly when LocalRTC=true timedatectl status displays incorrect RTC time Any client reading RTCTimeUSec via D-Bus gets the wrong value
 
 ---
