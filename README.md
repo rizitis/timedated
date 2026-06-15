@@ -1,22 +1,37 @@
-
-# [Timedate Daemon](https://cgit.radix.pro/radix/timedated.git/)
+# Timedate Daemon
 
 **TimeDate** Daemon is a system service that can be used to control the system time
 and related settings.
 
-This is the replacement of *systemd* service that control the **org.freedesktop.timedate1**
-*D-Bus interface* for GNU Linux distributions which does not have a *systemd*.
+This is a replacement for the *systemd* service that controls the **org.freedesktop.timedate1**
+*D-Bus interface*, intended for GNU/Linux distributions that do not use *systemd*.
 
-You can find specification at: [**Freedesktop.org**](https://www.freedesktop.org/software/systemd/man/latest/org.freedesktop.timedate1.html)
+You can find the specification at: [**Freedesktop.org**](https://www.freedesktop.org/software/systemd/man/latest/org.freedesktop.timedate1.html)
 
-**TimeDate** Daemon supports interactive parameter which can be used to control
-whether *PolKit* should interactively ask the user for authentication credentials
-if required. But also, if interactive way is not applicable, users permissions can
-be set by *PolKit* rules in the */usr/share/polkit-1/rules.d/org.freedesktop.timedate1.rules*
-file. For example, a system administrator can add Desktop-users into **wheel** group
-to give them rights to access the **org.freedesktop.timedate1** *D-Bus interface*.
+## Acknowledgements
 
-## Requirements:
+This project is a **fork** of the original
+[Timedate Daemon](https://github.com/radix-linux/timedated) by
+**Andrey V. Kosteltsev** (`kx@radix.pro`), originally developed for **Radix cross Linux**.
+
+Many thanks to the original author for the solid foundation. This fork adds
+fixes and improvements targeting **Slackware**, including a Bash
+`timedatectl` client and several bug fixes in the daemon.
+
+## How it works
+
+**TimeDate** Daemon supports an interactive parameter which controls
+whether *PolKit* should interactively ask the user for authentication
+credentials when required. Alternatively, when the interactive method is not
+applicable, user permissions can be set via *PolKit* rules in the
+`/usr/share/polkit-1/rules.d/org.freedesktop.timedate1.rules` file. For example,
+a system administrator can add desktop users to the **wheel** group to grant
+them access to the **org.freedesktop.timedate1** *D-Bus interface*.
+
+The privileged group is configurable at build time via the
+`-Dprivileged-group=` Meson option (default: `wheel`).
+
+## Requirements
 
  | Package           |      | min Version  |
  | :---              | :--: | :---         |
@@ -27,34 +42,58 @@ to give them rights to access the **org.freedesktop.timedate1** *D-Bus interface
  | libpcre2-8        |  >=  |  10.36       |
  | dbus              |  >=  |  1.13.18     |
 
-## How to Build:
+At runtime, the daemon expects an NTP daemon controllable through
+`/etc/rc.d/rc.ntpd` (the Slackware **ntp** package), `hwclock`
+(from **util-linux**) for RTC access, and the system timezone database in
+`/usr/share/zoneinfo/` (the **tzdata** package).
 
-```Bash
- meson setup --prefix=/usr . ..
- ninja
- ninja install
+## How to Build
+
+```  
+Read README in SlackBuild folder
 ```
 
-## Supported Distributions:
+Build-time options (see `meson_options.txt`):
 
- - [Radix cross Linux](https://radix.pro)
- - [Slackware](http://www.slackware.com)
-  ~~(needed litle changes in timeconfig script)~~ <br>
-Update: *Slackware-current works fine now*
+| Option              | Default                | Description                          |
+| :---                | :---                   | :---                                 |
+| `privileged-group`  | `wheel`                | Group with administrator privileges  |
+| `hwclock_conf`      | `/etc/hardwareclock`   | Hardware clock config file           |
+| `adjtime_conf`      | `/etc/adjtime`         | Adjtime config file                  |
+| `ntpd_conf`         | `/etc/ntp.conf`        | NTP daemon config file               |
+| `ntpd_rc`           | `/etc/rc.d/rc.ntpd`    | NTP daemon start/stop script         |
 
-For other systems the special implementation of NTP daemon control should be developed.
+## Supported Distributions
 
+ - [Slackware](http://www.slackware.com) — *Slackware-current works out of the box*
 
-## TODO:
+For other systems, a specific implementation of NTP daemon control may need to
+be developed.
 
-~~- *timedatectl* (simply it can be writen in Bash).~~ <br>
-Update: Done! 
+## timedatectl
+
+A Bash implementation of `timedatectl` is included, providing a familiar
+command-line interface to the daemon over D-Bus.
 
 ```
-loginctl --version
-elogind 257 (257.14)
+timedatectl --help
+Usage: timedatectl [OPTIONS] COMMAND
 
+Commands:
+  status                   Show current time settings
+  show                     Show settings in key=value format
+  set-timezone ZONE        Set the system timezone (e.g. Europe/Athens)
+  set-local-rtc [0|1]      Control whether RTC is in local time
+  set-ntp [0|1]            Enable or disable NTP synchronization
+  set-time TIME            Set time manually (e.g. '2026-05-31 20:30:00')
+  list-timezones           List available timezones
+  sync-now                 Force an immediate time sync (works even if NTP is off)
+
+Options:
+  -h, --help               Show this help
 ```
+
+### Examples
 
 ```
 timedatectl status
@@ -77,105 +116,34 @@ NTP=true
 NTPSynchronized=true
 TimeUSec=1780261839000000
 RTCTimeUSec=2026-06-01T00:10:39.117263+03:00
-
 ```
 
 ```
-timedatectl list-timezones | grep Europe
-Europe/Amsterdam
-Europe/Andorra
-Europe/Astrakhan
+timedatectl list-timezones | grep Athens
 Europe/Athens
-Europe/Belfast
-Europe/Belgrade
-Europe/Berlin
-Europe/Bratislava
-Europe/Brussels
-Europe/Bucharest
-Europe/Budapest
-Europe/Busingen
-Europe/Chisinau
-Europe/Copenhagen
-Europe/Dublin
-Europe/Gibraltar
-Europe/Guernsey
-Europe/Helsinki
-Europe/Isle_of_Man
-Europe/Istanbul
-Europe/Jersey
-Europe/Kaliningrad
-Europe/Kiev
-Europe/Kirov
-Europe/Kyiv
-Europe/Lisbon
-Europe/Ljubljana
-Europe/London
-Europe/Luxembourg
-Europe/Madrid
-Europe/Malta
-Europe/Mariehamn
-Europe/Minsk
-Europe/Monaco
-Europe/Moscow
-Europe/Nicosia
-Europe/Oslo
-Europe/Paris
-Europe/Podgorica
-Europe/Prague
-Europe/Riga
-Europe/Rome
-Europe/Samara
-Europe/San_Marino
-Europe/Sarajevo
-Europe/Saratov
-Europe/Simferopol
-Europe/Skopje
-Europe/Sofia
-Europe/Stockholm
-Europe/Tallinn
-Europe/Tirane
-Europe/Tiraspol
-Europe/Ulyanovsk
-Europe/Uzhgorod
-Europe/Vaduz
-Europe/Vatican
-Europe/Vienna
-Europe/Vilnius
-Europe/Volgograd
-Europe/Warsaw
-Europe/Zagreb
-Europe/Zaporozhye
-Europe/Zurich
-
 ```
 
+To set the time manually, NTP must be disabled first:
+
 ```
-busctl get-property org.freedesktop.timedate1 /org/freedesktop/timedate1 org.freedesktop.timedate1 Timezone
+timedatectl set-ntp 0
+timedatectl set-time '2026-05-31 20:30:00'
+```
+
+To recover the correct time afterwards:
+
+```
+sudo timedatectl sync-now
+```
+
+The daemon properties can also be queried directly over D-Bus:
+
+```
+busctl get-property org.freedesktop.timedate1 /org/freedesktop/timedate1 \
+  org.freedesktop.timedate1 Timezone
 s "Europe/Athens"
-
 ```
 
-```
-timedatectl --help
-Usage: timedatectl [OPTIONS] COMMAND
+## LICENSE
 
-Commands:
-  status                   Show current time settings
-  show                     Show settings in key=value format
-  set-timezone ZONE        Set the system timezone (e.g. Europe/Athens)
-  set-local-rtc [0|1]      Control whether RTC is in local time
-  set-ntp [0|1]            Enable or disable NTP synchronization
-  set-time TIME            Set time manually (e.g. '2026-05-31 20:30:00')
-  list-timezones           List available timezones
-  sync-now                 Force immediate NTP time sync
-
-Options:
-  -h, --help               Show this help
-
-```
-
-
-## LICENSE:
-
-[GNU General Public License Version 2, June 1991](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
-
+[GNU General Public License, Version 2, June 1991](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)

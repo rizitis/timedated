@@ -1,0 +1,17 @@
+This is TEMPLATE SlackBuild
+
+1. Edit version might need fix for latest
+
+2. user who doesn't want a wheel does:GROUP=root ./timedated.SlackBuild
+   But thats not "correct" and i dont suggest it.
+Think about it practically:
+Wheel is the standard group for admin privileges
+If someone sets up root, then only root gets auto-authorization other
+users will be prompted for a password every time
+(which is the PolKit fallback anyway)
+
+In practice, wheel is the correct default for 99% of users
+Important: Even if you leave wheel out, a system that has no users in
+the wheel group will simply prompt for the root password via PolKit
+it doesn't break anything.
+Wheel is not restrictive, it's a "fast path" for admins.

@@ -15,5 +15,5 @@ timedated: for use on systems without systemd.
 timedated:
 timedated: It supports PolKit authentication and NTP daemon control via
 timedated: Slackware's rc.ntpd script.
-timedated: Fork: https://github.com/rizitis/timedated
-timedated: Homepage: https://cgit.radix.pro/radix/timedated.git/
+timedated: ThisFork: https://github.com/rizitis/timedated
+timedated: Orig: https://cgit.radix.pro/radix/timedated.git/

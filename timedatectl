@@ -189,7 +189,7 @@ Commands:
   set-ntp [0|1]            Enable or disable NTP synchronization
   set-time TIME            Set time manually (e.g. '2026-05-31 20:30:00')
   list-timezones           List available timezones
-  sync-now                 Force immediate NTP time sync
+  sync-now                 Force immediate time sync (works even if NTP is off)
 
 Options:
   -h, --help               Show this help

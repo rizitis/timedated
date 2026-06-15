@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# Forge Slackbuild for yml...
-# This slackbuild is for dev dont use it please...
+# This SlackBuild build master branch
+# It is not suggested to use it its not a stable and proper SlackBuild
+# PLEASE read README in the SlackBuild folder and use those files for build
 
 cd $(dirname $0) ; CWD=$(pwd)
 
 PRGNAM=timedated
-VERSION=${VERSION:-2026_master3.0}
+VERSION=${VERSION:-2026_master06.02}
 BUILD=${BUILD:-1}
 TAG=${TAG:-_FRG}
 PKGTYPE=${PKGTYPE:-txz}

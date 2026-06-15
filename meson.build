@@ -1,5 +1,5 @@
 project('timedated', 'c',
-    version: '1.0.2',
+    version: '2026.06.02',
     license: 'GPLv2+',
     default_options: [
         'buildtype=debugoptimized',
@@ -8,10 +8,10 @@ project('timedated', 'c',
     ],
     meson_version: '>= 0.56.0')
 
-soversion = 3
-current = 1
-revision = 0
-libversion = '@0@.@1@.@2@'.format(soversion, current, revision)
+#soversion = 3
+#current = 1
+#revision = 0
+#libversion = '@0@.@1@.@2@'.format(soversion, current, revision)
 
 gnome = import('gnome')
 i18n = import('i18n')

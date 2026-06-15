@@ -25,10 +25,11 @@
 cd $(dirname $0) ; CWD=$(pwd)
 
 PRGNAM=timedated
-VERSION=${VERSION:-2026.06.01}
+VERSION=${VERSION:-2026.06.02} # NOTE VERSION MIGHT NEED A FIX
+GROUP=${GROUP:-wheel}    # privileged group (override with GROUP=root etc.)
 BUILD=${BUILD:-1}
-TAG=${TAG:-_SBo}
-PKGTYPE=${PKGTYPE:-tgz}
+TAG=${TAG:-_TMD}
+PKGTYPE=${PKGTYPE:-txz}
 
 if [ -z "$ARCH" ]; then
   case "$( uname -m )" in
@@ -43,7 +44,7 @@ if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
   exit 0
 fi
 
-TMP=${TMP:-/tmp/SBo}
+TMP=${TMP:-/tmp/TMD}
 PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
 
@@ -85,7 +86,7 @@ cd build
     --libexecdir=/usr/libexec \
     --buildtype=release \
     --strip \
-    -Dprivileged-group=wheel \
+    -Dprivileged-group="$GROUP" \
     -Dhwclock_conf=/etc/hardwareclock \
     -Dadjtime_conf=/etc/adjtime \
     -Dntpd_conf=/etc/ntp.conf \

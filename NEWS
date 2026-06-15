@@ -1,3 +1,22 @@
+Version 2026.06.02
+------------
+- Now that works its time for a "make proper" Release:
+
+ - Edit *.build files (use same version with tarballs and remove .so versions etc. dead code)
+ - Make master branch default remove trunk.
+ - I will keep po files althought we dont use/need them time to properly remove it cost a lot...
+ - Keep GLIB_VERSION_MAX_ALLOWED=2.76 because protects against accidental use of new APIs
+ - SlackBuild is not my Business for updates. It will stay as TEMPLATE but wont be updated as for version.
+ - READ README in SlackBuild folder.
+ - Update NEWS file etc...
+
+Version 2026.06.01
+------------
+- Bug fix Release: 2026-06-15
+- Unfortunately, github didn't sync properly and created buggy tarballs
+- Remove confetti... as requested :D
+- Plans to coplete move project to https://forge.slackware.nl/rizitis/timedated
+
 Version 2026.6.0
 ------------
 - Forked by Anagnostakis Ioannis 2026-05
