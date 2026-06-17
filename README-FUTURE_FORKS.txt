@@ -1,4 +1,4 @@
-The only thing certain about a person from the moment he comes into this world is that one day he too will die!
+ The only thing certain about a person from the moment he comes into this world is that one day he too will die!
 Also, the appetite in a person is like the changes in the weather, today we are so fine, tomorrow we are gloomy and melancholic and so on.
 So if the good scenario is that I am bored or that I have gone fishing in Crete
 and I am not doing anything else, which happens often and I disappear from everything,
