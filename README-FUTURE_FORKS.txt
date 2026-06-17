@@ -13,7 +13,7 @@ I'm giving some useful information for anyone who wants to deal with their own f
 It consists of:
 meson.build -- calls i18n.gettext() (2 lines)
 POTFILES.in -- list of files with translatable strings
-LINGUAS -- list of languages ​​(only ru_RU.utf8)
+LINGUAS -- list of languages (only ru_RU.utf8)
 timedated.pot -- template
 ru_RU_utf8.po -- the Russian translation
 
@@ -44,7 +44,7 @@ _("Replace the old daemon")
 _("Show extra debugging information")
 _("Enable debugging (implies --verbose)")
 
-That's all. That is, each language will translate only these 3 lines of help text. If you add languages ​​as is: Each .po will translate only these 3 lines that appear in timedated --help. Practically useless nobody runs --help on a system daemon
+That's all. That is, each language will translate only these 3 lines of help text. If you add languages as is: Each .po will translate only these 3 lines that appear in timedated --help. Practically useless nobody runs --help on a system daemon
 For the translation to make sense, you should first wrap the messages that the user sees with _()  i.e. the D-Bus error messages that appear in the Plasma GUI:
 // NOW:
 "set-time: Automatic time synchronization is enabled"
@@ -54,7 +54,7 @@ _("set-time: Automatic time synchronization is enabled")
 
 These errors are shown to the user via the Plasma dialog, so their translation makes real sense.
 
-My honest recommendation: It's only worth it if you wrap the user-facing error messages first. Otherwise you're adding languages ​​for 3 useless help lines.
+My honest recommendation: It's only worth it if you wrap the user-facing error messages first. Otherwise you're adding languages for 3 useless help lines.
 
 
 === wheel group VS root ===
