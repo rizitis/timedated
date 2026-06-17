@@ -132,7 +132,7 @@ I didn't do it because I'm bored :D
 
 === max versions inside? is that wrong? ===
 
-Ιt's not wrong, it's intentional. Look:
+It's not wrong, it's intentional. Look:
 common_cflags = cc.get_supported_arguments([
 '-DGLIB_VERSION_MIN_REQUIRED=' + glib_version_def,
 '-DGLIB_VERSION_MAX_ALLOWED=' + glib_version_def,
