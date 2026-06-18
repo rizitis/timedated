@@ -1,0 +1,111 @@
+.\" Manpage for timedated
+.TH TIMEDATED 8 "June 2026" "timedated" "System Administration"
+.SH NAME
+timedated \- system time and date D-Bus daemon
+.SH SYNOPSIS
+.B timedated
+.RI [ OPTIONS ]
+.SH DESCRIPTION
+.B timedated
+is a system service that controls the system time and related settings. It
+implements the
+.B org.freedesktop.timedate1
+D-Bus interface and is intended as a replacement for the corresponding
+.I systemd
+service on GNU/Linux distributions that do not use
+.IR systemd .
+.PP
+The daemon is normally not started by hand. It is activated automatically
+over the system D-Bus when a client (such as
+.BR timedatectl (1)
+or a desktop environment's date & time settings panel) first accesses the
+.B org.freedesktop.timedate1
+interface. The daemon runs as
+.BR root .
+.PP
+Through this interface, clients can read and change the system timezone,
+choose whether the RTC is kept in local time or UTC, enable or disable NTP
+synchronization, set the system clock, and list the available timezones.
+.SH OPTIONS
+.TP
+.BR -r ", " --replace
+Replace a running daemon that currently owns the
+.B org.freedesktop.timedate1
+name on the bus.
+.TP
+.BR -v ", " --verbose
+Show extra debugging information.
+.TP
+.BR -d ", " --debug
+Enable debugging output (implies
+.BR --verbose ).
+.SH "D-BUS INTERFACE"
+The daemon exposes the following methods on
+.B org.freedesktop.timedate1
+at the object path
+.IR /org/freedesktop/timedate1 :
+.BR SetTime ,
+.BR SetTimezone ,
+.BR SetLocalRTC ,
+.BR SetNTP ", and"
+.BR ListTimezones .
+It also exposes the read-only properties
+.BR Timezone ,
+.BR LocalRTC ,
+.BR CanNTP ,
+.BR NTP ,
+.BR NTPSynchronized ,
+.BR TimeUSec ", and"
+.BR RTCTimeUSec .
+.PP
+Method calls that change a setting are authorized via
+.IR PolKit .
+By default, members of the
+.B wheel
+group are permitted; the privileged group is configurable at build time and
+the policy can be adjusted in the installed PolKit rules file.
+.SH FILES
+.TP
+.I /usr/libexec/timedated
+The daemon executable.
+.TP
+.I /usr/share/dbus-1/system-services/org.freedesktop.timedate1.service
+D-Bus service activation file.
+.TP
+.I /usr/share/dbus-1/system.d/org.freedesktop.timedate1.conf
+D-Bus policy controlling who may own the service name.
+.TP
+.I /usr/share/polkit-1/actions/org.freedesktop.timedate1.policy
+PolKit action definitions.
+.TP
+.I /usr/share/polkit-1/rules.d/org.freedesktop.timedate1.rules
+PolKit rules granting the privileged group access.
+.TP
+.I /etc/localtime
+Symlink to the active timezone file under
+.IR /usr/share/zoneinfo .
+.TP
+.I /etc/hardwareclock
+Indicates whether the RTC is kept in local time or UTC.
+.TP
+.I /etc/adjtime
+Adjtime configuration used by the RTC handling.
+.SH "NTP DAEMON CONTROL"
+On Slackware, NTP synchronization is handled through the system NTP daemon
+controlled by
+.IR /etc/rc.d/rc.ntpd ,
+using
+.I /etc/ntp.conf
+as its configuration. These paths are configurable at build time.
+.SH SEE ALSO
+.BR timedatectl (1),
+.BR hwclock (8),
+.BR ntpd (8),
+.BR polkit (8),
+.BR dbus-daemon (1)
+.SH AUTHOR
+Originally written by Andrey V. Kosteltsev for Radix cross Linux.
+Forked and modified by Ioannis Anagnostakis (rizitis).
+.SH LICENSE
+This program is free software, distributed under the GNU General Public
+License, version 2 or later. See the source for copying conditions.

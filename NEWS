@@ -1,3 +1,9 @@
+Version 2026.06.03
+------------
+- As of Wed Jun 17 21:45:03 UTC 2026 according to the Slackware-current ChangeLog the package is present in the distribution.
+So there is really no reason for the SlackBuild folder included to tree.
+- Add man pages: the --mandir was a bit too obvious  :D
+
 Version 2026.06.02
 ------------
 - Now that works its time for a "make proper" Release:

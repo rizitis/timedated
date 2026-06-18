@@ -1,5 +1,5 @@
 project('timedated', 'c',
-    version: '2026.06.02',
+    version: '2026.06.03',
     license: 'GPLv2+',
     default_options: [
         'buildtype=debugoptimized',
@@ -71,6 +71,7 @@ config_h = configure_file(output: 'config.h', configuration: cdata)
 subdir('po')
 subdir('dbus')
 subdir('src')
+subdir('man')
 
 output = []
 output += 'timedated ' + meson.project_version()

@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # This SlackBuild build master branch
-# It is not suggested to use it its not a stable and proper SlackBuild
-# PLEASE read README in the SlackBuild folder and use those files for build
+# It is not suggested to use it, its not a stable and proper SlackBuild
+#
 
 cd $(dirname $0) ; CWD=$(pwd)
 
 PRGNAM=timedated
-VERSION=${VERSION:-2026_master06.02}
+VERSION=${VERSION:-2026_master06.03}
 BUILD=${BUILD:-1}
 TAG=${TAG:-_FRG}
 PKGTYPE=${PKGTYPE:-txz}
@@ -56,36 +56,55 @@ find . ! -type l -type d ! -perm 755 -exec chmod -f 755 {} +
 find . ! -type l -type f -perm /111 ! -perm 755 -exec chmod -f 755 {} +
 find . ! -type l -type f ! -perm /111 ! -perm 644 -exec chmod -f 644 {} +
 
-mkdir build
-cd build
-  CFLAGS="$SLKCFLAGS" \
-  CXXFLAGS="$SLKCFLAGS" \
-  meson setup \
-    --prefix=/usr \
-    --libdir=lib${LIBDIRSUFFIX} \
-    --libexecdir=/usr/libexec \
-    --buildtype=release \
-    --strip \
-    -Dprivileged-group=wheel \
-    -Dhwclock_conf=/etc/hardwareclock \
-    -Dadjtime_conf=/etc/adjtime \
-    -Dntpd_conf=/etc/ntp.conf \
-    -Dntpd_rc=/etc/rc.d/rc.ntpd \
-    ..
-  "${NINJA:=ninja}"
-  DESTDIR=$PKG $NINJA install
+export CFLAGS="$SLKCFLAGS"
+export CXXFLAGS="$SLKCFLAGS"
+mkdir meson-build
+cd meson-build
+meson setup \
+  --prefix=/usr \
+  --libdir=lib${LIBDIRSUFFIX} \
+  --libexecdir=/usr/libexec \
+  --bindir=/usr/bin \
+  --sbindir=/usr/sbin \
+  --includedir=/usr/include \
+  --datadir=/usr/share \
+  --mandir=/usr/man \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --buildtype=release \
+  -Dprivileged-group=wheel \
+  -Dhwclock_conf=/etc/hardwareclock \
+  -Dadjtime_conf=/etc/adjtime \
+  -Dntpd_conf=/etc/ntp.conf \
+  -Dntpd_rc=/etc/rc.d/rc.ntpd \
+  .. || exit 1
+  "${NINJA:=ninja}" $NUMJOBS || exit 1
+  DESTDIR=$PKG $NINJA install || exit 1
 cd ..
 
 mkdir -p $PKG/usr/bin
 cat timedatectl > $PKG/usr/bin/timedatectl
-chmod +x $PKG/usr/bin/timedatectl
+chmod 755 $PKG/usr/bin/timedatectl
 
-find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
-  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
+find $PKG/usr/man -type f -exec gzip -9 {} \+
+for i in $( find $PKG/usr/man -type l ) ; do
+  ln -s $( readlink $i ).gz $i.gz
+  rm $i
+done
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a \
+  AUTHORS* BUGS-NEWS* COPYING* NEWS* README* \
+  $PKG/usr/doc/${PRGNAM}-$VERSION
+
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-"$VERSION"/$PRGNAM.SlackBuild
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
 /sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE
+sleep 1
+sbopkglint $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

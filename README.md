@@ -49,11 +49,6 @@ At runtime, the daemon expects an NTP daemon controllable through
 
 ## How to Build
 
-```  
-Latest release will be found: https://forge.slackware.nl/rizitis/timedated/releases
-PLEASE Read README in SlackBuild folder
-```
-
 Build-time options (see `meson_options.txt`):
 
 | Option              | Default                | Description                          |
@@ -67,6 +62,8 @@ Build-time options (see `meson_options.txt`):
 ## Supported Distributions
 
  - [Slackware](http://www.slackware.com) — *Slackware-current works out of the box*
+
+> As of Wed Jun 17 21:45:03 UTC 2026 according to the Slackware-current ChangeLog the package is present in the distribution.
 
 For other systems, a specific implementation of NTP daemon control may need to
 be developed.
@@ -143,6 +140,13 @@ The daemon properties can also be queried directly over D-Bus:
 busctl get-property org.freedesktop.timedate1 /org/freedesktop/timedate1 \
   org.freedesktop.timedate1 Timezone
 s "Europe/Athens"
+```
+
+### MAN
+
+```
+man timedatectl
+man timedated
 ```
 
 ## LICENSE

@@ -1,0 +1,152 @@
+.\" Manpage for timedatectl (timedated bash client)
+.TH TIMEDATECTL 1 "June 2026" "timedated" "User Commands"
+.SH NAME
+timedatectl \- control the system time and date
+.SH SYNOPSIS
+.B timedatectl
+.RI [ OPTIONS ]
+.IR COMMAND " [" ARGUMENT ]
+.SH DESCRIPTION
+.B timedatectl
+is a Bash client used to query and change the system clock, the system
+timezone, and the settings related to the real-time clock (RTC) and NTP
+time synchronization.
+.PP
+It communicates with the
+.B timedated
+daemon over the system D-Bus, using the
+.B org.freedesktop.timedate1
+interface. It is intended as a drop-in replacement for the
+.I systemd
+tool of the same name on distributions that do not use
+.IR systemd .
+.PP
+Most query commands work as an ordinary user. Commands that change a
+setting are authorized through
+.IR PolKit ;
+depending on the system policy, members of the privileged group (by default
+.BR wheel )
+may be allowed to perform them without entering a password, while other
+users are asked to authenticate.
+.SH COMMANDS
+.TP
+.B status
+Show the current time settings in human-readable form, including local time,
+universal time, RTC time, timezone, and the NTP and RTC flags. This is the
+default command when none is given.
+.TP
+.B show
+Show the same settings in a machine-readable
+.IB key = value
+format.
+.TP
+.BI set-timezone " ZONE"
+Set the system timezone to
+.IR ZONE ,
+for example
+.BR Europe/Athens .
+Use
+.B list-timezones
+to see the available values.
+.TP
+.BI set-local-rtc " [0|1]"
+Control whether the RTC is kept in local time
+.RB ( 1 )
+or in UTC
+.RB ( 0 ).
+Keeping the RTC in UTC is generally recommended.
+.TP
+.BI set-ntp " [0|1]"
+Enable
+.RB ( 1 )
+or disable
+.RB ( 0 )
+NTP-based automatic time synchronization. Enabling starts and enables the
+NTP daemon; disabling stops and disables it.
+.TP
+.BI set-time " TIME"
+Set the system clock manually to
+.IR TIME ,
+for example
+.BR "'2026-05-31 20:30:00'" .
+NTP must be disabled first (see
+.BR set-ntp ).
+The command asks for interactive confirmation before changing the clock.
+.TP
+.B list-timezones
+List all available timezones, one per line.
+.TP
+.B sync-now
+Force an immediate time synchronization. This works even when automatic
+mode is disabled: it performs a one-shot synchronization (using
+.BR ntpdate ,
+falling back to a one-shot
+.B ntpd
+run), updates the RTC from the corrected system clock, and restarts the NTP
+daemon only if it was already running. This command must be run as root.
+.SH OPTIONS
+.TP
+.BR -h ", " --help
+Show a short usage summary and exit.
+.SH EXAMPLES
+.PP
+Show the current status:
+.PP
+.RS
+.EX
+timedatectl status
+.EE
+.RE
+.PP
+Change the timezone:
+.PP
+.RS
+.EX
+timedatectl set-timezone Europe/Athens
+.EE
+.RE
+.PP
+Set the clock manually (NTP must be off):
+.PP
+.RS
+.EX
+timedatectl set-ntp 0
+timedatectl set-time '2026-05-31 20:30:00'
+.EE
+.RE
+.PP
+Recover the correct time afterwards:
+.PP
+.RS
+.EX
+sudo timedatectl sync-now
+.EE
+.RE
+.SH EXIT STATUS
+Returns 0 on success and 1 on error (for example, an invalid argument, a
+failed D-Bus call, or insufficient privileges).
+.SH FILES
+.TP
+.I /etc/localtime
+Symlink to the active timezone file under
+.IR /usr/share/zoneinfo .
+.TP
+.I /etc/hardwareclock
+Indicates whether the RTC is kept in local time or UTC.
+.TP
+.I /etc/adjtime
+Adjtime configuration used by the RTC handling.
+.SH SEE ALSO
+.BR timedated (8),
+.BR hwclock (8),
+.BR ntpd (8),
+.BR date (1)
+.SH AUTHOR
+Bash client written by Ioannis Anagnostakis (rizitis).
+.PP
+Part of the
+.B timedated
+project, a fork of the original Timedate Daemon by Andrey V. Kosteltsev.
+.SH LICENSE
+This program is free software, distributed under the GNU General Public
+License, version 2 or later. See the source for copying conditions.
