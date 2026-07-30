@@ -1,4 +1,30 @@
 ---
+Bug fixed: unbounded atexit() handler registration in open_rtc(): timedated leaked ~3 MB of RSS per day of uptime.
+    Register the /dev/rtc atexit() handler only once:
+    open_rtc() called atexit(close_rtc) on every successful open. Since
+    close_rtc() resets rtc_dev_fd to -1, the early-return guard at the top
+    of open_rtc() never fires on subsequent calls, so the handler was
+    registered again on each open. atexit() does not deduplicate: every
+    registration allocates an entry that lives until process exit.
+
+    The property sync timer in rcl-main.c runs at 1 Hz unconditionally and
+    reaches open_rtc() through get_rtctime_usec() -> clock_get_hwclock(),
+    so the exit-handler list grew by 86400 entries per day. Measured cost:
+    ~2.9 MB of RSS per day, ~1 GB per year of uptime.
+
+    A single registration is sufficient: close_rtc() inspects the current
+    value of rtc_dev_fd, so it behaves correctly however many times the
+    device has been opened and closed in the meantime.
+
+    The daemon is D-Bus activated and never exits once started, so this
+    affects any long-running system on which timedate1 has been touched
+    even once -- including headless installs that carry the package by
+    default and never run a desktop.
+
+    Only src/rcl-time-utils.c changes. No header, build, D-Bus or polkit
+    change; no public function signature or return value is affected.
+
+---
 Bug fixed: https://www.linuxquestions.org/questions/slackware-14/building-timedate-daemon-for-slackware-current-a-d-bus-service-that-is-required-starting-with-kde-plasma-6-7-0-a-4175764503/page3.html#post6637456
 
 Thanks a lot for the detailed report and testing it was very helpful. Here's what I found and fixed:

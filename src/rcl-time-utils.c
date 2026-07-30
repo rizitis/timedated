@@ -46,6 +46,7 @@ static int open_rtc( void )
     "/dev/rtc",
     "/dev/misc/rtc"
   };
+  static gboolean atexit_registered = FALSE;
   size_t i;
 
   if( rtc_dev_fd != -1 )
@@ -73,8 +74,22 @@ static int open_rtc( void )
       rtc_dev_name = *fls; /* default for error messages */
   }
 
-  if( rtc_dev_fd != -1 )
+  /*
+    Register the cleanup handler only once. close_rtc() resets rtc_dev_fd
+    to -1, so every subsequent open_rtc() would otherwise call atexit()
+    again. atexit() does not deduplicate: each registration allocates an
+    entry that lives until process exit. Since this function is reached
+    once per second by the property sync timer, repeated registration
+    grows the exit-handler list without bound (~3 MB of RSS per day).
+    One registration is sufficient: close_rtc() inspects the current
+    rtc_dev_fd, so it does the right thing however often the device has
+    been opened and closed in between.
+   */
+  if( rtc_dev_fd != -1 && !atexit_registered )
+  {
     atexit( close_rtc );
+    atexit_registered = TRUE;
+  }
 
   return rtc_dev_fd;
 }

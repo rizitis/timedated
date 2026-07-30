@@ -7,7 +7,7 @@
 cd $(dirname $0) ; CWD=$(pwd)
 
 PRGNAM=timedated
-VERSION=${VERSION:-2026_master06.03}
+VERSION=${VERSION:-2026_master07.01}
 BUILD=${BUILD:-1}
 TAG=${TAG:-_FRG}
 PKGTYPE=${PKGTYPE:-txz}

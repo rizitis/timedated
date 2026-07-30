@@ -1,3 +1,7 @@
+Version 2026.07.01
+------------
+- Bug fix: unbounded atexit() handler registration in open_rtc(): timedated leaked ~3 MB of RSS per day of uptime.
+
 Version 2026.06.03
 ------------
 - As of Wed Jun 17 21:45:03 UTC 2026 according to the Slackware-current ChangeLog the package is present in the distribution.
