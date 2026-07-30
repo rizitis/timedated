@@ -1,5 +1,5 @@
 project('timedated', 'c',
-    version: '2026.06.03',
+    version: '2026.07.01',
     license: 'GPLv2+',
     default_options: [
         'buildtype=debugoptimized',
