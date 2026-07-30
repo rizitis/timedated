@@ -1,6 +1,11 @@
 Version 2026.07.01
 ------------
 - Bug fix: unbounded atexit() handler registration in open_rtc(): timedated leaked ~3 MB of RSS per day of uptime.
+  After upgradepkg on systems that do not often reboot:
+    sudo ls -l /proc/$(pgrep -x timedated)/exe <- old pgrep N
+    sudo kill $(pgrep -x timedated) <- kill daemon
+    timedatectl status <- start daemon new version
+    sudo ls -l /proc/$(pgrep -x timedated)/exe <- new pgrep N means new version active
 
 Version 2026.06.03
 ------------
